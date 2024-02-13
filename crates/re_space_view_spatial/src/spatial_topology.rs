@@ -5,7 +5,7 @@ use nohash_hasher::{IntMap, IntSet};
 use re_data_store::{StoreSubscriber, StoreSubscriberHandle};
 use re_log_types::{EntityPath, EntityPathHash, StoreId};
 use re_types::{
-    components::{DisconnectedSpace, PinholeProjection},
+    components::{DisconnectedSpace, PinholeProjection, ViewCoordinates},
     Loggable,
 };
 
@@ -36,6 +36,7 @@ bitflags::bitflags! {
     pub struct SubSpaceConnectionFlags: u8 {
         const Disconnected = 0b0000001;
         const Pinhole = 0b0000010;
+        const ViewCoordinates3d = 0b0000100;
     }
 }
 
@@ -45,6 +46,7 @@ impl SubSpaceConnectionFlags {
     pub fn is_connected_pinhole(&self) -> bool {
         self.contains(SubSpaceConnectionFlags::Pinhole)
             && !self.contains(SubSpaceConnectionFlags::Disconnected)
+        // ViewCoordinates does not disconnect spaces.
     }
 }
 
@@ -120,11 +122,31 @@ The new pinhole at {:?} is nested under it, implying an invalid projection from 
                 }
             }
         }
+        // ViewCoordinates(3d) of a child space does not change the dimensionality of its parent.
+        // Neither does a disconnect.
 
         self.child_spaces
             .entry(child_path.clone())
             .or_insert(new_connections_to_child) // insert into child spaces in the first place
             .insert(new_connections_to_child); // insert into connection flags
+    }
+
+    fn update_dimensionality_from_connections(&mut self) {
+        self.parent_space
+
+        if self.parent_space contains(SubSpaceConnectionFlags::Pinhole) {
+            SubSpaceDimensionality::TwoD
+        } else if connection_to_parent.contains(SubSpaceConnectionFlags::ViewCoordinates3d) {
+            SubSpaceDimensionality::ThreeD
+        } else {
+            // Has any of its children a Pinhole?
+            // If so, this must be a 3D space!
+            if connection_to_children.contains(SubSpaceDimensionality::TwoD) {
+                SubSpaceDimensionality::TwoD
+            } else {
+                SubSpaceDimensionality::Unknown
+            }
+        }
     }
 }
 
@@ -289,6 +311,8 @@ impl SpatialTopology {
                 new_subspace_connections.insert(SubSpaceConnectionFlags::Disconnected);
             } else if added_component == &PinholeProjection::name() {
                 new_subspace_connections.insert(SubSpaceConnectionFlags::Pinhole);
+            } else if added_component == &ViewCoordinates::name() {
+                new_subspace_connections.insert(SubSpaceConnectionFlags::ViewCoordinates3d);
             };
         }
 
@@ -324,10 +348,12 @@ impl SpatialTopology {
                 .get_mut(&subspace_origin_hash)
                 .expect("Subspace origin not part of origin->subspace map.");
 
-            // (see also `split_subspace`)`
-            if new_connections.contains(SubSpaceConnectionFlags::Pinhole) {
-                subspace.dimensionality = SubSpaceDimensionality::TwoD;
-            }
+                subspaces.
+
+            SubSpaceConnectionFlags::infer_dimensionality_from_connections(
+                new_connections,
+                subspace.child_spaces.values().map(|c| c.dimensionality))
+
 
             if let Some(parent_origin_hash) = subspace.parent_space {
                 self.subspaces
@@ -383,6 +409,9 @@ impl SpatialTopology {
         // (see also `update_space_with_new_connections`)
         let new_space_dimensionality = if connections.contains(SubSpaceConnectionFlags::Pinhole) {
             SubSpaceDimensionality::TwoD
+        } else if connections.contains(SubSpaceConnectionFlags::ViewCoordinates3d) {
+            // Pinhole "wins" over view coordinates. Implies that the view coordinates applies only to the entity itself.
+            SubSpaceDimensionality::ThreeD
         } else {
             SubSpaceDimensionality::Unknown
         };
