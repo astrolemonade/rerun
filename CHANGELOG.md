@@ -2,6 +2,22 @@
 
 ## [Unreleased](https://github.com/rerun-io/rerun/compare/latest...HEAD)
 
+## [0.13.1](https://github.com/rerun-io/rerun/compare/0.13.0...0.13.1)
+
+#### 🪳 Bug Fixes
+- Fix incorrect minimum supported rust version mentioned in docs and examples [#5195](https://github.com/rerun-io/rerun/pull/5195)
+- Fix (log only) error on quickly resizing the viewer [#5189](https://github.com/rerun-io/rerun/pull/5189)
+
+#### 🌁 Viewer Improvements
+- Less restrictive visualizability constraints of 2d entities, improved space view generation heuristics [#5188](https://github.com/rerun-io/rerun/pull/5188)
+
+#### 📚 Docs
+- Fix broken link in the installing-viewer documentation [#5236](https://github.com/rerun-io/rerun/pull/5236) (thanks [@BirgerMoell](https://github.com/BirgerMoell)!)
+
+#### 📦 Dependencies
+- Update `tungstenite` to remove RUSTSEC warning [#5200](https://github.com/rerun-io/rerun/pull/5200)
+
+
 ## [0.13.0](https://github.com/rerun-io/rerun/compare/0.12.1...0.13.0) - Fast time series, improved layout editing & UI overrides - 2024-02-09
 
 ### Overview & Highlights
