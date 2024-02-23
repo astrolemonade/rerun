@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["SelectionSummary"],"fn":["context_menu_items_for_selection_summary","context_menu_ui_for_item","possible_child_container_kind","summarize_selection"],"struct":["AddContainer","AddSpaceView","ContentRemove","ContentVisibilityToggle","MoveContentsToNewContainer","Separator","SubMenu"],"trait":["ContextMenuItem"]};
